@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>UBL Learning Center – Well-Being Survey</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --blue:       #0175C0;
+  --blue-dark:  #00508A;
+  --blue-deep:  #003666;
+  --blue-light: #2196F3;
+  --blue-pale:  #E3F2FD;
+  --blue-glow:  rgba(1,117,192,0.18);
+  --sky:        #81D4FA;
+  --white:      #FFFFFF;
+  --off-white:  #F7FBFF;
+  --ink:        #041D35;
+  --ink-mid:    #1E3A5F;
+  --muted:      #6B90B8;
+  --line:       #D0E8F7;
+  --green:      #00B87A;
+  --danger:     #E53935;
+  --radius:     18px;
+  --radius-sm:  11px;
+  --shadow-blue: 0 12px 48px rgba(1,117,192,0.22);
+  --shadow-card: 0 6px 32px rgba(4,29,53,0.10);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Outfit',sans-serif;background:var(--off-white);color:var(--ink);min-height:100vh;overflow-x:hidden;}
+
+/* CANVAS */
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* HEADER */
+.site-header{position:relative;z-index:20;background:linear-gradient(135deg,var(--blue-deep) 0%,var(--blue-dark) 50%,var(--blue) 100%);padding:0 40px;height:70px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 24px rgba(0,54,102,0.35);overflow:hidden;}
+.header-shimmer{position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.06) 50%,transparent 100%);animation:hshine 4s ease-in-out infinite;}
+@keyframes hshine{0%,100%{transform:translateX(-100%);}50%{transform:translateX(100%);}}
+.brand{display:flex;align-items:center;gap:14px;position:relative;z-index:1;}
+.brand-mark{width:44px;height:44px;background:var(--white);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.2);flex-shrink:0;}
+.brand-text h1{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;color:var(--white);letter-spacing:0.2px;}
+.brand-text span{font-size:10.5px;color:rgba(255,255,255,0.55);font-weight:400;letter-spacing:1.5px;text-transform:uppercase;}
+.admin-btn{position:relative;z-index:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);border-radius:30px;padding:7px 18px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .3s;letter-spacing:.5px;display:flex;align-items:center;gap:7px;}
+.admin-btn:hover{background:rgba(255,255,255,0.18);color:var(--white);border-color:rgba(255,255,255,0.4);}
+
+/* STAGE */
+.stage{position:relative;z-index:1;min-height:calc(100vh - 70px);display:flex;align-items:center;justify-content:center;padding:44px 20px 64px;}
+
+/* SCREENS */
+.screen{width:100%;max-width:620px;display:none;position:relative;}
+.screen.active{display:block;animation:enter .55s cubic-bezier(0.16,1,0.3,1) forwards;}
+@keyframes enter{from{opacity:0;transform:translateY(40px) scale(0.97);}to{opacity:1;transform:translateY(0) scale(1);}}
+
+/* WELCOME CARD */
+.welcome-card{background:var(--white);border-radius:28px;box-shadow:var(--shadow-blue);overflow:hidden;}
+.welcome-hero{background:linear-gradient(150deg,var(--blue-deep) 0%,var(--blue) 65%,var(--blue-light) 100%);padding:52px 44px 44px;position:relative;overflow:hidden;}
+.welcome-hero::before{content:'';position:absolute;width:380px;height:380px;border:60px solid rgba(255,255,255,0.04);border-radius:50%;right:-120px;top:-120px;}
+.welcome-hero::after{content:'';position:absolute;width:200px;height:200px;border:40px solid rgba(255,255,255,0.05);border-radius:50%;left:-60px;bottom:-60px;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:30px;padding:6px 16px;font-size:11px;color:rgba(255,255,255,0.85);font-weight:500;letter-spacing:1px;text-transform:uppercase;margin-bottom:22px;position:relative;z-index:1;}
+.hero-pulse{width:8px;height:8px;background:var(--sky);border-radius:50%;animation:livepulse 1.5s ease-in-out infinite;}
+@keyframes livepulse{0%,100%{box-shadow:0 0 0 0 rgba(129,212,250,0.6);}50%{box-shadow:0 0 0 6px rgba(129,212,250,0);}}
+.hero-ring{width:82px;height:82px;position:relative;margin-bottom:22px;z-index:1;}
+.hero-ring .r{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,255,255,0.15);animation:spinr 12s linear infinite;}
+.hero-ring .r2{inset:8px;border-color:rgba(255,255,255,0.1);animation-direction:reverse;animation-duration:8s;}
+@keyframes spinr{to{transform:rotate(360deg);}}
+.hero-ring .ctr{position:absolute;inset:14px;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 30px rgba(129,212,250,0.3);}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:700;color:var(--white);line-height:1.2;margin-bottom:12px;position:relative;z-index:1;}
+.hero-sub{font-size:14px;color:rgba(255,255,255,0.68);line-height:1.75;max-width:390px;position:relative;z-index:1;}
+.welcome-body{padding:36px 44px 40px;}
+.notice-bar{display:flex;gap:12px;align-items:flex-start;background:var(--blue-pale);border:1px solid rgba(1,117,192,0.2);border-left:4px solid var(--blue);border-radius:var(--radius-sm);padding:14px 18px;margin-bottom:28px;}
+.notice-bar .ni{font-size:18px;flex-shrink:0;margin-top:1px;}
+.notice-bar p{font-size:13px;color:var(--ink-mid);line-height:1.6;}
+.notice-bar strong{color:var(--blue-dark);}
+.field{margin-bottom:22px;}
+.field-label{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:8px;letter-spacing:.4px;text-transform:uppercase;}
+.field-label em{color:var(--danger);font-style:normal;}
+.field-wrap{position:relative;}
+.field-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--muted);pointer-events:none;}
+.text-input{width:100%;padding:13px 16px 13px 42px;border:2px solid var(--line);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:14px;color:var(--ink);background:var(--white);outline:none;transition:border-color .25s,box-shadow .25s,transform .2s;}
+.text-input:focus{border-color:var(--blue);box-shadow:0 0 0 4px var(--blue-glow);transform:translateY(-1px);}
+.text-input::placeholder{color:var(--muted);font-weight:300;}
+.field-error{display:none;font-size:12px;color:var(--danger);margin-top:6px;align-items:center;gap:5px;font-weight:500;}
+.field-error.show{display:flex;}
+.cta{width:100%;padding:16px;background:linear-gradient(135deg,var(--blue) 0%,var(--blue-light) 100%);color:var(--white);border:none;border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;position:relative;overflow:hidden;transition:transform .25s,box-shadow .25s;display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:.3px;}
+.cta::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);transform:translateX(-100%);transition:transform .5s;}
+.cta:hover::after{transform:translateX(100%);}
+.cta:hover{transform:translateY(-2px);box-shadow:var(--shadow-blue);}
+.cta:active{transform:translateY(0);}
+.cta-arrow{width:26px;height:26px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;transition:transform .3s;}
+.cta:hover .cta-arrow{transform:translateX(3px);}
+.survey-hint{text-align:center;font-size:12px;color:var(--muted);margin-top:14px;display:flex;align-items:center;justify-content:center;gap:6px;}
+
+/* SURVEY WRAP */
+.survey-wrap{background:var(--white);border-radius:28px;box-shadow:var(--shadow-blue);overflow:hidden;}
+.prog-header{background:linear-gradient(135deg,var(--blue-deep),var(--blue-dark));padding:22px 36px 20px;position:relative;overflow:hidden;}
+.prog-header::after{content:'';position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;border:30px solid rgba(255,255,255,0.04);}
+.prog-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.prog-label{font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;font-weight:500;}
+.prog-dots{display:flex;gap:6px;}
+.dot{width:28px;height:5px;border-radius:3px;background:rgba(255,255,255,0.15);transition:background .4s,width .3s;}
+.dot.done{background:var(--sky);}
+.dot.active{background:var(--white);width:44px;}
+.prog-track{height:4px;background:rgba(255,255,255,0.12);border-radius:4px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--sky),var(--white));border-radius:4px;transition:width .6s cubic-bezier(0.22,1,0.36,1);position:relative;}
+.prog-fill::after{content:'';position:absolute;right:-1px;top:-1px;bottom:-1px;width:6px;background:var(--white);border-radius:3px;box-shadow:0 0 8px rgba(255,255,255,0.8);}
+.q-body{padding:36px 40px 32px;}
+.q-chip{display:inline-flex;align-items:center;gap:8px;border:1.5px solid rgba(1,117,192,0.25);background:var(--blue-pale);color:var(--blue);border-radius:30px;padding:5px 15px;font-size:11.5px;font-weight:600;letter-spacing:.4px;margin-bottom:16px;}
+.q-num{width:20px;height:20px;background:var(--blue);color:var(--white);border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.q-title{font-family:'Cormorant Garamond',serif;font-size:23px;font-weight:600;color:var(--ink);line-height:1.45;margin-bottom:6px;}
+.q-hint{font-size:12.5px;color:var(--muted);font-style:italic;margin-bottom:26px;line-height:1.5;}
+
+/* OPTIONS */
+.opts{display:flex;flex-direction:column;gap:9px;}
+.opt{display:flex;align-items:center;gap:14px;padding:14px 18px;border:2px solid var(--line);border-radius:13px;cursor:pointer;transition:all .28s cubic-bezier(0.22,1,0.36,1);background:var(--white);user-select:none;position:relative;overflow:hidden;}
+.opt-ripple{position:absolute;border-radius:50%;background:rgba(1,117,192,0.12);transform:scale(0);pointer-events:none;animation:rip .5s ease-out forwards;}
+@keyframes rip{to{transform:scale(4);opacity:0;}}
+.opt:hover{border-color:rgba(1,117,192,0.4);background:var(--blue-pale);transform:translateX(5px);}
+.opt.selected{border-color:var(--blue);background:linear-gradient(135deg,var(--blue-pale),#EEF7FF);transform:translateX(8px);box-shadow:0 4px 20px rgba(1,117,192,0.15);}
+.opt-radio{width:22px;height:22px;flex-shrink:0;border:2px solid var(--line);border-radius:50%;transition:all .25s;display:flex;align-items:center;justify-content:center;}
+.opt.selected .opt-radio{border-color:var(--blue);background:var(--blue);box-shadow:0 0 0 3px rgba(1,117,192,0.2);}
+.opt.selected .opt-radio::after{content:'';width:7px;height:7px;background:var(--white);border-radius:50%;}
+.opt-icon{width:38px;height:38px;border-radius:10px;background:var(--off-white);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;transition:background .25s,transform .25s;}
+.opt:hover .opt-icon{transform:scale(1.1);}
+.opt.selected .opt-icon{background:rgba(1,117,192,0.1);}
+.opt-text{flex:1;}
+.opt-label{font-size:14px;font-weight:500;color:var(--ink);display:block;}
+.opt-sub{font-size:11.5px;color:var(--muted);margin-top:1px;display:block;}
+.opt-check{width:22px;height:22px;flex-shrink:0;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--white);opacity:0;transform:scale(0.4);transition:all .3s cubic-bezier(0.34,1.56,0.64,1);}
+.opt.selected .opt-check{opacity:1;transform:scale(1);}
+
+/* TEXTAREA */
+.survey-textarea{width:100%;min-height:140px;padding:16px 18px;border:2px solid var(--line);border-radius:13px;font-family:'Outfit',sans-serif;font-size:14px;color:var(--ink);resize:none;outline:none;line-height:1.7;transition:border-color .25s,box-shadow .25s;background:var(--white);}
+.survey-textarea:focus{border-color:var(--blue);box-shadow:0 0 0 4px var(--blue-glow);}
+.survey-textarea::placeholder{color:var(--muted);font-style:italic;font-weight:300;}
+.char-bar{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+.char-fill-wrap{flex:1;height:3px;background:var(--line);border-radius:2px;margin-right:12px;overflow:hidden;}
+.char-fill{height:100%;background:var(--blue);border-radius:2px;width:0%;transition:width .2s;}
+.char-num{font-size:11px;color:var(--muted);}
+
+/* NAV */
+.nav-bar{display:flex;gap:12px;margin-top:28px;padding-top:24px;border-top:1px solid var(--line);}
+.btn-back{padding:13px 20px;background:transparent;border:2px solid var(--line);border-radius:var(--radius-sm);cursor:pointer;font-family:'Outfit',sans-serif;font-size:13px;color:var(--muted);font-weight:500;transition:all .2s;display:flex;align-items:center;gap:7px;}
+.btn-back:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-pale);}
+.btn-next{flex:1;padding:14px;background:linear-gradient(135deg,var(--blue),var(--blue-light));color:var(--white);border:none;border-radius:var(--radius-sm);cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;transition:all .3s;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:9px;letter-spacing:.3px;}
+.btn-next::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);transform:translateX(-100%);transition:transform .5s;}
+.btn-next:hover::after{transform:translateX(100%);}
+.btn-next:hover{box-shadow:var(--shadow-blue);transform:translateY(-2px);}
+.btn-submit{background:linear-gradient(135deg,#00875A,var(--green));}
+.btn-submit:hover{box-shadow:0 8px 28px rgba(0,184,122,0.35);}
+.q-error{font-size:12px;color:var(--danger);margin-top:10px;display:none;align-items:center;gap:5px;font-weight:500;}
+.q-error.show{display:flex;}
+
+/* THANK YOU */
+.ty-card{background:var(--white);border-radius:28px;box-shadow:var(--shadow-blue);overflow:hidden;text-align:center;}
+.ty-top{background:linear-gradient(150deg,var(--blue-deep),var(--blue),#2196F3);padding:56px 40px 52px;position:relative;overflow:hidden;}
+.ty-top::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 120%,rgba(129,212,250,0.15) 0%,transparent 60%);}
+.ty-ring{position:relative;width:100px;height:100px;margin:0 auto 24px;}
+.ty-ring svg{position:absolute;inset:0;width:100%;height:100%;animation:rotring 8s linear infinite;}
+@keyframes rotring{to{transform:rotate(360deg);}}
+.ty-check{position:absolute;inset:12px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;backdrop-filter:blur(8px);animation:popchk .6s cubic-bezier(0.34,1.56,0.64,1) .1s both;}
+@keyframes popchk{from{transform:scale(0.2);opacity:0;}to{transform:scale(1);opacity:1;}}
+.ty-title{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:700;color:var(--white);position:relative;z-index:1;margin-bottom:10px;}
+.ty-msg{font-size:14px;color:rgba(255,255,255,0.72);line-height:1.7;max-width:380px;margin:0 auto;position:relative;z-index:1;}
+.ty-body{padding:36px 44px 40px;}
+.ty-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:30px;}
+.ty-stat{background:var(--blue-pale);border:1px solid rgba(1,117,192,0.15);border-radius:12px;padding:16px 12px;text-align:center;}
+.ty-stat .si{font-size:22px;margin-bottom:6px;}
+.ty-stat .sv{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;color:var(--blue-dark);line-height:1;}
+.ty-stat .sl{font-size:11px;color:var(--muted);margin-top:3px;}
+.ty-new{display:inline-flex;align-items:center;gap:8px;background:var(--blue-pale);color:var(--blue-dark);border:2px solid rgba(1,117,192,0.25);border-radius:var(--radius-sm);padding:13px 30px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;transition:all .3s;text-decoration:none;}
+.ty-new:hover{background:var(--blue);color:var(--white);border-color:var(--blue);transform:translateY(-2px);box-shadow:var(--shadow-blue);}
+
+/* OVERLAYS */
+.overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(4,29,53,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.auth-box{background:var(--white);border-radius:24px;padding:44px 40px;width:360px;box-shadow:0 32px 80px rgba(4,29,53,0.3);animation:enter .4s cubic-bezier(0.22,1,0.36,1);text-align:center;}
+.auth-icon{width:68px;height:68px;margin:0 auto 20px;background:var(--blue-pale);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;border:2px solid rgba(1,117,192,0.2);}
+.auth-box h3{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+.auth-box p{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5;}
+.auth-err{font-size:12.5px;color:var(--danger);min-height:20px;margin-top:8px;font-weight:500;}
+.auth-actions{display:flex;gap:10px;margin-top:20px;}
+.admin-modal{background:var(--white);border-radius:24px;width:95%;max-width:1020px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(4,29,53,0.3);animation:enter .45s cubic-bezier(0.22,1,0.36,1);}
+.admin-hd{background:linear-gradient(135deg,var(--blue-deep),var(--blue-dark));padding:22px 32px;display:flex;align-items:center;justify-content:space-between;}
+.admin-hd h2{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--white);}
+.admin-hd p{font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px;}
+.admin-close{width:38px;height:38px;background:rgba(255,255,255,0.1);border:none;border-radius:9px;color:rgba(255,255,255,0.8);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.admin-close:hover{background:rgba(255,255,255,0.2);}
+.admin-toolbar{padding:16px 32px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.stat-pills{display:flex;gap:10px;flex-wrap:wrap;}
+.stat-pill{background:var(--blue-pale);border:1px solid rgba(1,117,192,0.2);border-radius:30px;padding:7px 16px;font-size:13px;color:var(--ink);display:flex;align-items:center;gap:7px;}
+.stat-pill strong{color:var(--blue-dark);}
+.stat-pill span{color:var(--muted);}
+.tbar-acts{display:flex;gap:10px;}
+.btn-export{padding:10px 20px;background:linear-gradient(135deg,#00875A,var(--green));color:var(--white);border:none;border-radius:var(--radius-sm);cursor:pointer;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;transition:all .3s;}
+.btn-export:hover{box-shadow:0 6px 20px rgba(0,184,122,0.35);transform:translateY(-1px);}
+.btn-clear{padding:10px 16px;background:transparent;border:1.5px solid #FFCDD2;color:var(--danger);border-radius:var(--radius-sm);cursor:pointer;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;transition:all .2s;}
+.btn-clear:hover{background:#FFF5F5;}
+.admin-content{overflow-y:auto;flex:1;padding:20px 32px;}
+.resp-table{width:100%;border-collapse:collapse;font-size:13px;min-width:720px;}
+.resp-table thead th{background:linear-gradient(135deg,var(--blue-deep),var(--blue-dark));color:rgba(255,255,255,0.8);padding:12px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:600;white-space:nowrap;}
+.resp-table thead th:first-child{border-radius:8px 0 0 8px;}
+.resp-table thead th:last-child{border-radius:0 8px 8px 0;}
+.resp-table tbody tr{transition:background .2s;}
+.resp-table tbody tr:hover td{background:var(--blue-pale);}
+.resp-table tbody td{padding:12px 14px;border-bottom:1px solid #F0F5FB;vertical-align:top;color:var(--ink);}
+.resp-table tbody tr:last-child td{border-bottom:none;}
+.resp-badge{display:inline-block;padding:3px 11px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap;}
+.admin-empty{text-align:center;padding:56px 20px;color:var(--muted);}
+.admin-empty .ei{font-size:42px;margin-bottom:14px;}
+.admin-empty p{font-size:14px;}
+
+@media(max-width:600px){
+  .site-header{padding:0 16px;}
+  .welcome-hero{padding:36px 24px 32px;}
+  .hero-title{font-size:28px;}
+  .welcome-body{padding:26px 24px 28px;}
+  .q-body{padding:26px 22px 22px;}
+  .prog-header{padding:18px 22px 16px;}
+  .ty-body{padding:28px 24px 30px;}
+  .ty-stats{grid-template-columns:1fr;}
+  .admin-hd,.admin-toolbar,.admin-content{padding-left:16px;padding-right:16px;}
+  .auth-box{width:320px;padding:32px 24px;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-shimmer"></div>
+  <div class="brand">
+    <div class="brand-mark">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="6" fill="#0175C0"/>
+        <path d="M6 20L14 8L22 20" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="14" cy="8" r="2.5" fill="white"/>
+      </svg>
+    </div>
+    <div class="brand-text">
+      <h1>United Bank Limited</h1>
+      <span>Learning &amp; Development Center</span>
+    </div>
+  </div>
+  <button class="admin-btn" onclick="openAuth()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    Admin Panel
+  </button>
+</header>
+
+<div class="stage">
+
+  <!-- WELCOME -->
+  <div class="screen active" id="s-welcome">
+    <div class="welcome-card">
+      <div class="welcome-hero">
+        <div class="hero-badge"><div class="hero-pulse"></div> Live Survey · Confidential</div>
+        <div class="hero-ring">
+          <div class="r"></div>
+          <div class="r r2"></div>
+          <div class="ctr">🌱</div>
+        </div>
+        <h1 class="hero-title">How are you<br>feeling today?</h1>
+        <p class="hero-sub">Take 2 minutes to share how you're doing. Your honest feedback helps HR build a more supportive, human-centered Learning Center.</p>
+      </div>
+      <div class="welcome-body">
+        <div class="notice-bar">
+          <span class="ni">🔒</span>
+          <p><strong>Your privacy is protected.</strong> Responses are reviewed by HR in aggregate only. Your identity is not linked to your answers beyond your Employee ID for tracking purposes.</p>
+        </div>
+        <div class="field">
+          <label class="field-label" for="emp-id">Employee ID <em>*</em></label>
+          <div class="field-wrap">
+            <span class="field-icon">🪪</span>
+            <input class="text-input" id="emp-id" type="text" placeholder="e.g. UBL-004521" maxlength="20" autocomplete="off" onkeydown="if(event.key==='Enter')startSurvey()"/>
+          </div>
+          <div class="field-error" id="emp-err">⚠ Please enter your Employee ID to continue.</div>
+        </div>
+        <button class="cta" onclick="startSurvey()">
+          Begin Survey
+          <div class="cta-arrow">→</div>
+        </button>
+        <p class="survey-hint">⏱ Less than 2 minutes &nbsp;·&nbsp; 4 questions &nbsp;·&nbsp; 100% confidential</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q1 -->
+  <div class="screen" id="s-q1">
+    <div class="survey-wrap">
+      <div class="prog-header">
+        <div class="prog-top">
+          <span class="prog-label">Your progress</span>
+          <div class="prog-dots">
+            <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+        </div>
+        <div class="prog-track"><div class="prog-fill" style="width:25%"></div></div>
+      </div>
+      <div class="q-body">
+        <div class="q-chip"><div class="q-num">1</div> Overall Well-Being</div>
+        <h2 class="q-title">How are you feeling today while attending the session at the Learning Center?</h2>
+        <p class="q-hint">Gives HR a quick pulse on employee well-being across the department.</p>
+        <div class="opts" id="opts-q1">
+          <div class="opt" onclick="pick('q1',this,'Very Good')"><div class="opt-radio"></div><div class="opt-icon">😄</div><div class="opt-text"><span class="opt-label">Very Good</span><span class="opt-sub">Feeling energized and positive</span></div><div class="opt-check">✓</div></div>
+          <div class="opt" onclick="pick('q1',this,'Good')"><div class="opt-radio"></div><div class="opt-icon">🙂</div><div class="opt-text"><span class="opt-label">Good</span><span class="opt-sub">Generally doing well</span></div><div class="opt-check">✓</div></div>
+          <div class="opt" onclick="pick('q1',this,'Neutral')"><div class="opt-radio"></div><div class="opt-icon">😐</div><div class="opt-text"><span class="opt-label">Neutral</span><span class="opt-sub">Neither good nor bad</span></div><div class="opt-check">✓</div></div>
+          <div class="opt" onclick="pick('q1',this,'Stressed')"><div class="opt-radio"></div><div class="opt-icon">😟</div><div class="opt-text"><span class="opt-label">Stressed</span><span class="opt-sub">Feeling some pressure today</span></div><div class="opt-check">✓</div></div>
+          <div class="opt" onclick="pick('q1',this,'Very Stressed')"><div class="opt-radio"></div><div class="opt-icon">😩</div><div class="opt-text"><span class="opt-label">Very Stressed</span><span class="opt-sub">Finding today particularly difficult</span></div><div class="opt-check">✓</div></div>
+        </div>
+        <div class="q-error" id="err-q1">⚠ Please make a selection before continuing.</div>
+        <div class="nav-bar">
+          <button class="btn-back" onclick="goTo('s-welcome')">← Back</button>
+          <button class="btn-next" onclick="next('q1','s-q2')">Continue →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="screen" id="s-q2">
+    <div class="survey-wrap">
+      <div class="prog-header">
+        <div class="prog-top">
+          <span class="prog-label">Your progress</span>
+          <div class="prog-dots">
+            <div class="dot done"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+        </div>
+        <div class="prog-track"><div class="prog-fill" style="width:50%"></div></div>
+      </div>
+      <div class="q-body">
+        <div class="q-chip"><div class="q-num">2</div> Comfort &amp; Environment</div>
+        <h2 class="q-title">Do you feel comfortable and able to focus during your time at the Learning Center today?</h2>
+        <p class="q-hint">Checks whether the environment supports well-being and concentration.</p>
+        <div class="opts" id="opts-q2">
+          <div class="opt" onclick="pick('q2',this,'Strongly Agree')"><div class="opt-radio"></div><div class="opt-icon">✅</div><div class="opt-text"><span class="opt-label">Strongly Agree</span><span class="opt-sub">Very comfortable and focused</span></div><div class="opt-check">✓</div></div>
+          <div class="opt" onclick="pick('q2',this,'Agree')"><div class="opt-radio"></div><div class="opt-icon">👍</div><div class="opt-text"><span class="opt-label">Agree</span><span class="opt-sub">Generally comfortable</span></div><div class="opt-check">✓</div></div>
+          <div class="opt" onclick="pick('q2',this,'Neutral')"><div class="opt-radio"></div><div class="opt-icon">🤝</div><div class="opt-text"><span class="opt-label">Neutral</span><span class="opt-sub">Neither comfortable nor uncomfortable</span></div><div class="opt-check">✓</div></div>
+          <div class="opt" onclick="pick('q2',this,'Disagree')"><div class="opt-radio"></div><div class="opt-icon">👎</div><div class="opt-text"><span class="opt-label">Disagree</span><span class="opt-sub">Some discomfort or distractions</span></div><div class="opt-check">✓</div></div>
+          <div class="opt" onclick="pick('q2',this,'Strongly Disagree')"><div class="opt-radio"></div><div class="opt-icon">🚫</div><div class="opt-text"><span class="opt-label">Strongly Disagree</span><span class="opt-sub">Unable to focus today</span></div><div class="opt-check">✓</div></div>
+        </div>
+        <div class="q-error" id="err-q2">⚠ Please make a selection before continuing.</div>
+        <div class="nav-bar">
+          <button class="btn-back" onclick="goTo('s-q1')">← Back</button>
+          <button class="btn-next" onclick="next('q2','s-q3')">Continue →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="screen" id="s-q3">
+    <div class="survey-wrap">
+      <div class="prog-header">
+        <div class="prog-top">
+          <span class="prog-label">Your progress</span>
+          <div class="prog-dots">
+            <div class="dot done"></div><div class="dot done"></div><div class="dot active"></div><div class="dot"></div>
+          </div>
+        </div>
+        <div class="prog-track"><div class="prog-fill" style="width:75%"></div></div>
+      </div>
+      <div class="q-body">
+        <div class="q-chip"><div class="q-num">3</div> Workload &amp; Mental State</div>
+        <h2 class="q-title">How manageable does your workload and schedule feel today?</h2>
+        <p class="q-hint">Helps HR identify stress or burnout signals early, enabling timely support.</p>
+        <div class="opts" id="opts-q3">
+          <div class="opt" onclick="pick('q3',this,'Very Manageable')"><div class="opt-radio"></div><div class="opt-icon">🟢</div><div class="opt-text"><span class="opt-label">Very Manageable</span><span class="opt-sub">Fully in control of my workload</span></div><div class="opt-check">✓</div></div>
+          <div class="opt" onclick="pick('q3',this,'Manageable')"><div class="opt-radio"></div><div class="opt-icon">🔵</div><div class="opt-text"><span class="opt-label">Manageable</span><span class="opt-sub">Handling it reasonably well</span></div><div class="opt-check">✓</div></div>
+          <div class="opt" onclick="pick('q3',this,'Neutral')"><div class="opt-radio"></div><div class="opt-icon">⚪</div><div class="opt-text"><span class="opt-label">Neutral</span><span class="opt-sub">Neither easy nor difficult</span></div><div class="opt-check">✓</div></div>
+          <div class="opt" onclick="pick('q3',this,'Difficult to Manage')"><div class="opt-radio"></div><div class="opt-icon">🟡</div><div class="opt-text"><span class="opt-label">Difficult to Manage</span><span class="opt-sub">Feeling stretched thin</span></div><div class="opt-check">✓</div></div>
+          <div class="opt" onclick="pick('q3',this,'Overwhelming')"><div class="opt-radio"></div><div class="opt-icon">🔴</div><div class="opt-text"><span class="opt-label">Overwhelming</span><span class="opt-sub">Struggling significantly today</span></div><div class="opt-check">✓</div></div>
+        </div>
+        <div class="q-error" id="err-q3">⚠ Please make a selection before continuing.</div>
+        <div class="nav-bar">
+          <button class="btn-back" onclick="goTo('s-q2')">← Back</button>
+          <button class="btn-next" onclick="next('q3','s-q4')">Continue →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="screen" id="s-q4">
+    <div class="survey-wrap">
+      <div class="prog-header">
+        <div class="prog-top">
+          <span class="prog-label">Your progress — final step</span>
+          <div class="prog-dots">
+            <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot active"></div>
+          </div>
+        </div>
+        <div class="prog-track"><div class="prog-fill" style="width:100%"></div></div>
+      </div>
+      <div class="q-body">
+        <div class="q-chip"><div class="q-num">4</div> Open Feedback <span style="font-size:10px;font-weight:400;color:var(--muted);margin-left:4px;">(Optional)</span></div>
+        <h2 class="q-title">Is there anything you'd like to share with HR regarding your well-being or experience today?</h2>
+        <p class="q-hint">This is a safe, confidential space. Share any concerns, suggestions, or thoughts freely.</p>
+        <textarea class="survey-textarea" id="q4-text" placeholder="Your thoughts are valued here. Feel free to share anything on your mind — this goes directly to HR..." maxlength="500" oninput="onType()"></textarea>
+        <div class="char-bar">
+          <div class="char-fill-wrap"><div class="char-fill" id="char-fill"></div></div>
+          <span class="char-num"><span id="char-count">0</span> / 500</span>
+        </div>
+        <div class="nav-bar">
+          <button class="btn-back" onclick="goTo('s-q3')">← Back</button>
+          <button class="btn-next btn-submit" onclick="submit()">✓ Submit Survey</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THANK YOU -->
+  <div class="screen" id="s-thanks">
+    <div class="ty-card">
+      <div class="ty-top">
+        <div class="ty-ring">
+          <svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="45" stroke="rgba(255,255,255,0.15)" stroke-width="3" stroke-dasharray="8 6"/></svg>
+          <div class="ty-check">✅</div>
+        </div>
+        <h2 class="ty-title">Thank You!</h2>
+        <p class="ty-msg">Your response has been recorded. UBL's HR &amp; L&D team genuinely values your feedback and uses it to build a better, more supportive Learning Center for everyone.</p>
+      </div>
+      <div class="ty-body">
+        <div class="ty-stats">
+          <div class="ty-stat"><div class="si">🌟</div><div class="sv" id="ty-wb">—</div><div class="sl">Well-Being</div></div>
+          <div class="ty-stat"><div class="si">🏛</div><div class="sv" id="ty-cf">—</div><div class="sl">Comfort</div></div>
+          <div class="ty-stat"><div class="si">📊</div><div class="sv" id="ty-wl">—</div><div class="sl">Workload</div></div>
+        </div>
+        <button class="ty-new" onclick="reset()">🔄 &nbsp;Submit Another Response</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- AUTH OVERLAY -->
+<div class="overlay" id="auth-overlay">
+  <div class="auth-box">
+    <div class="auth-icon">🔐</div>
+    <h3>Admin Access</h3>
+    <p>Enter the admin password to view and export all survey responses.</p>
+    <div class="field-wrap">
+      <span class="field-icon">🔑</span>
+      <input class="text-input" id="auth-input" type="password" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkAuth()"/>
+    </div>
+    <div class="auth-err" id="auth-err"></div>
+    <div class="auth-actions">
+      <button class="btn-back" style="flex:1;" onclick="closeAuth()">Cancel</button>
+      <button class="btn-next" style="flex:2;" onclick="checkAuth()">Unlock →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN OVERLAY -->
+<div class="overlay" id="admin-overlay">
+  <div class="admin-modal">
+    <div class="admin-hd">
+      <div>
+        <h2>📋 Survey Response Dashboard</h2>
+        <p>UBL Learning Center · Well-Being Survey · Admin Panel</p>
+      </div>
+      <button class="admin-close" onclick="closeAdmin()">✕</button>
+    </div>
+    <div class="admin-toolbar">
+      <div class="stat-pills">
+        <div class="stat-pill">📬 <strong id="stat-total">0</strong> <span>Total Responses</span></div>
+        <div class="stat-pill">📅 <strong id="stat-today">0</strong> <span>Today</span></div>
+      </div>
+      <div class="tbar-acts">
+        <button class="btn-export" onclick="exportXLSX()">⬇ Export to Excel</button>
+        <button class="btn-clear" onclick="clearAll()">🗑 Clear All</button>
+      </div>
+    </div>
+    <div class="admin-content">
+      <div id="admin-empty" class="admin-empty" style="display:none">
+        <div class="ei">📭</div>
+        <p>No responses recorded yet. Once employees complete the survey, all responses will appear here.</p>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="resp-table" id="resp-table">
+          <thead><tr>
+            <th>#</th><th>Timestamp</th><th>Employee ID</th>
+            <th>Well-Being</th><th>Comfort &amp; Focus</th><th>Workload</th><th>Open Feedback</th>
+          </tr></thead>
+          <tbody id="resp-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PASS='UBL@LC2025', KEY='ubl_wb_survey_v2';
+let A={empId:'',q1:'',q2:'',q3:'',q4:''};
+
+/* ANIMATED CANVAS */
+(function(){
+  const cv=document.getElementById('bg-canvas'),ctx=cv.getContext('2d');
+  let W,H,nodes=[];
+  function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+  function mkNodes(){
+    nodes=[];
+    const n=Math.floor(W*H/20000);
+    for(let i=0;i<n;i++) nodes.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*2+1,op:Math.random()*.35+.08});
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+      const dx=nodes[i].x-nodes[j].x,dy=nodes[i].y-nodes[j].y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<120){ctx.beginPath();ctx.moveTo(nodes[i].x,nodes[i].y);ctx.lineTo(nodes[j].x,nodes[j].y);ctx.strokeStyle=`rgba(1,117,192,${0.055*(1-d/120)})`;ctx.lineWidth=1;ctx.stroke();}
+    }
+    nodes.forEach(n=>{
+      ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fillStyle=`rgba(1,117,192,${n.op})`;ctx.fill();
+      n.x+=n.vx;n.y+=n.vy;
+      if(n.x<0||n.x>W)n.vx*=-1;if(n.y<0||n.y>H)n.vy*=-1;
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',()=>{resize();mkNodes();});
+  resize();mkNodes();draw();
+})();
+
+/* NAV */
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById(id);
+  el.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function startSurvey(){
+  const v=document.getElementById('emp-id').value.trim();
+  const e=document.getElementById('emp-err');
+  if(!v){e.classList.add('show');return;}
+  e.classList.remove('show');
+  A.empId=v; goTo('s-q1');
+}
+
+function next(qKey,tid){
+  const e=document.getElementById('err-'+qKey);
+  if(!A[qKey]){e.classList.add('show');return;}
+  e.classList.remove('show'); goTo(tid);
+}
+
+/* PICK */
+function pick(qKey,el,val){
+  el.closest('.opts').querySelectorAll('.opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected'); A[qKey]=val;
+  const rip=document.createElement('div');
+  rip.className='opt-ripple';
+  rip.style.cssText=`width:${el.offsetWidth}px;height:${el.offsetHeight}px;left:0;top:0;`;
+  el.appendChild(rip); setTimeout(()=>rip.remove(),600);
+  const e=document.getElementById('err-'+qKey);
+  if(e)e.classList.remove('show');
+}
+
+/* TEXTAREA */
+function onType(){
+  const l=document.getElementById('q4-text').value.length;
+  document.getElementById('char-count').textContent=l;
+  document.getElementById('char-fill').style.width=(l/500*100)+'%';
+}
+
+/* SUBMIT */
+function submit(){
+  A.q4=document.getElementById('q4-text').value.trim();
+  const ts=new Date().toLocaleString('en-PK',{year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
+  const rec={timestamp:ts,empId:A.empId,q1:A.q1,q2:A.q2,q3:A.q3,q4:A.q4||'—'};
+  const stored=JSON.parse(localStorage.getItem(KEY)||'[]');
+  stored.push(rec); localStorage.setItem(KEY,JSON.stringify(stored));
+  const sh=v=>v.split(' ').slice(0,2).join(' ');
+  document.getElementById('ty-wb').textContent=sh(A.q1);
+  document.getElementById('ty-cf').textContent=sh(A.q2);
+  document.getElementById('ty-wl').textContent=sh(A.q3);
+  goTo('s-thanks');
+}
+
+/* RESET */
+function reset(){
+  A={empId:'',q1:'',q2:'',q3:'',q4:''};
+  document.getElementById('emp-id').value='';
+  document.getElementById('q4-text').value='';
+  document.getElementById('char-count').textContent='0';
+  document.getElementById('char-fill').style.width='0%';
+  document.querySelectorAll('.opt').forEach(o=>o.classList.remove('selected'));
+  document.querySelectorAll('.field-error,.q-error').forEach(e=>e.classList.remove('show'));
+  goTo('s-welcome');
+}
+
+/* AUTH */
+function openAuth(){document.getElementById('auth-input').value='';document.getElementById('auth-err').textContent='';document.getElementById('auth-overlay').classList.add('open');setTimeout(()=>document.getElementById('auth-input').focus(),150);}
+function closeAuth(){document.getElementById('auth-overlay').classList.remove('open');}
+function checkAuth(){
+  if(document.getElementById('auth-input').value===PASS){closeAuth();openAdmin();}
+  else{document.getElementById('auth-err').textContent='⚠ Incorrect password. Please try again.';document.getElementById('auth-input').value='';document.getElementById('auth-input').focus();}
+}
+
+/* ADMIN */
+function openAdmin(){
+  const data=JSON.parse(localStorage.getItem(KEY)||'[]');
+  document.getElementById('stat-total').textContent=data.length;
+  const todayPfx=new Date().toLocaleString('en-PK',{day:'2-digit',month:'short'});
+  document.getElementById('stat-today').textContent=data.filter(r=>r.timestamp.startsWith(todayPfx)).length;
+  const tbody=document.getElementById('resp-tbody');
+  tbody.innerHTML='';
+  const empty=document.getElementById('admin-empty'),table=document.getElementById('resp-table');
+  if(!data.length){empty.style.display='block';table.style.display='none';}
+  else{
+    empty.style.display='none';table.style.display='table';
+    data.forEach((r,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td style="color:var(--muted);font-size:12px;">${i+1}</td><td style="font-size:12px;color:var(--muted);white-space:nowrap;">${r.timestamp}</td><td><strong style="color:var(--blue-dark);">${r.empId}</strong></td><td>${rb(r.q1)}</td><td>${rb(r.q2)}</td><td>${rb(r.q3)}</td><td style="font-size:12px;color:var(--muted);max-width:200px;line-height:1.4;">${r.q4}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+  document.getElementById('admin-overlay').classList.add('open');
+}
+
+function rb(v){
+  const p=['Very Good','Good','Strongly Agree','Agree','Very Manageable','Manageable'];
+  const n=['Stressed','Very Stressed','Disagree','Strongly Disagree','Difficult to Manage','Overwhelming'];
+  let c='#6B90B8',bg='#EEF5FD';
+  if(p.includes(v)){c='#00875A';bg='#E0F7EF';}
+  if(n.includes(v)){c='#C62828';bg='#FDECEA';}
+  if(v==='Neutral'){c='#E65100';bg='#FFF3E0';}
+  return `<span class="resp-badge" style="color:${c};background:${bg};">${v}</span>`;
+}
+
+function closeAdmin(){document.getElementById('admin-overlay').classList.remove('open');}
+
+/* EXPORT */
+function exportXLSX(){
+  const data=JSON.parse(localStorage.getItem(KEY)||'[]');
+  if(!data.length){alert('No responses to export yet.');return;}
+  const rows=data.map((r,i)=>({'#':i+1,'Timestamp':r.timestamp,'Employee ID':r.empId,'Q1 – Overall Well-Being':r.q1,'Q2 – Comfort & Environment':r.q2,'Q3 – Workload / Mental State':r.q3,'Q4 – Open Feedback':r.q4}));
+  const ws=XLSX.utils.json_to_sheet(rows);
+  ws['!cols']=[{wch:4},{wch:22},{wch:16},{wch:26},{wch:26},{wch:26},{wch:40}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Well-Being Responses');
+  XLSX.writeFile(wb,`UBL_LC_WellBeing_Survey_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+/* CLEAR */
+function clearAll(){if(confirm('Permanently delete ALL survey responses? This cannot be undone.')){localStorage.removeItem(KEY);openAdmin();}}
+
+/* CLOSE ON OUTSIDE CLICK */
+['auth-overlay','admin-overlay'].forEach(id=>document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
+</script>
+</body>
+</html>
