@@ -272,7 +272,7 @@ body{font-family:'Outfit',sans-serif;background:var(--off-white);color:var(--ink
           <label class="field-label" for="emp-id">Employee ID <em>*</em></label>
           <div class="field-wrap">
             <span class="field-icon">🪪</span>
-            <input class="text-input" id="emp-id" type="text" placeholder="e.g. 123456" maxlength="6" autocomplete="off" onkeydown="if(event.key==='Enter')startSurvey()"/>
+            <input class="text-input" id="emp-id" type="text" placeholder="for e.g 912345" maxlength="6" autocomplete="off" onkeydown="if(event.key==='Enter')startSurvey()"/>
           </div>
           <div class="field-error" id="emp-err">⚠ Please enter your Employee ID to continue.</div>
         </div>
@@ -397,7 +397,7 @@ body{font-family:'Outfit',sans-serif;background:var(--off-white);color:var(--ink
         <div class="q-chip"><div class="q-num">4</div> Open Feedback <span style="font-size:10px;font-weight:400;color:var(--muted);margin-left:4px;">(Optional)</span></div>
         <h2 class="q-title">Is there anything you'd like to share with HR regarding your well-being or experience today?</h2>
         <p class="q-hint">This is a safe, confidential space. Share any concerns, suggestions, or thoughts freely.</p>
-        <textarea class="survey-textarea" id="q4-text" placeholder="Your thoughts are valued here. Feel free to share anything on your mind — this goes directly to HR..." maxlength="500" oninput="onType()"></textarea>
+        <textarea class="survey-textarea" id="q4-text" placeholder="Your thoughts are valued here. Feel free to share anything on your mind. This is only shared with the HR Team" maxlength="500" oninput="onType()"></textarea>
         <div class="char-bar">
           <div class="char-fill-wrap"><div class="char-fill" id="char-fill"></div></div>
           <span class="char-num"><span id="char-count">0</span> / 500</span>
